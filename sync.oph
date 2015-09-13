@@ -127,8 +127,8 @@ show:
     ldy #0
     jsr $fff4
 
-    lda #255
-    sta $70
+    lda #255                ; Set the length of time to display the picture
+    sta $70                 ; with the enhanced palette.
 
     sei
 
@@ -139,7 +139,7 @@ show:
 
     start:
 
-    lda palette_fe08
+    lda palette_fe08        ; Set the palette for the first scanline.
     sta $fe08
     lda palette_fe09
     sta $fe09
@@ -180,13 +180,6 @@ show:
         nop                 ; 2 c
         nop                 ; 2 c
 
-        nop                 ; 2 c
-        nop                 ; 2 c
-        nop                 ; 2 c
-        nop                 ; 2 c
-        nop                 ; 2 c
-
-        nop                 ; 2 c
         cpx #last_row       ; 2 c
         beq end_loop        ; 2 ~c
         inx                 ; 2 c
@@ -198,7 +191,7 @@ show:
         lda palette_fe09,x  ; 4 ~c
         sta $fe09           ; 4 c
 
-                            ; 56 c
+                            ; 52 c
 
         jmp loop
 
