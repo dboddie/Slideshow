@@ -70,6 +70,9 @@ if __name__ == "__main__":
     if not os.path.exists("data"):
         os.mkdir("data")
     
+    #if not os.path.exists("Pictures"):
+    #    os.mkdir("Pictures")
+    
     for file_name in argv[1:]:
     
         im = Image.open(file_name)
@@ -81,10 +84,12 @@ if __name__ == "__main__":
         if im.size[0] > 320:
             if im.size[0] > im.size[1]:
                 height = int((320 * im.size[1])/im.size[0])
-                im = im.resize((320, height), Image.CUBIC)
+                im = im.resize((320, height), Image.NEAREST)
             elif im.size[1] > im.size[0]:
                 width = int((256 * im.size[0])/im.size[1])
-                im = im.resize((width, 256), Image.CUBIC)
+                im = im.resize((width, 256), Image.NEAREST)
+        
+        #im.save(os.path.join("Pictures", "c_" + os.path.split(file_name)[1]))
         
         data = im.tostring()
         rows = []
