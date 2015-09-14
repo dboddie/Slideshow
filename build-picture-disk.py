@@ -39,10 +39,13 @@ boot_text = [
     "*FX 13,7",
     "*FX 13,8",
     "*FX 13,9",
+    # Disable flashing colours
+    "*FX 9,0",
+    "*FX 10,0",
     # Disable analogue port sampling
     "*FX 16,0",
     # Disable print and ADC
-    #"*FX 163,128,0",
+    "*FX 163,128,0",
     # Disable the expansion ROM
     #"R%=?&2AC",
     #"?&2AC=0",
