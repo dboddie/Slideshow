@@ -130,12 +130,24 @@ show:
     lda #255                ; Set the length of time to display the picture
     sta $70                 ; with the enhanced palette.
 
+    lda $fe00
+    ora #$04
+    sta $fe00
+
     sei
+
+    lda #$ff
+    sta $fe08
+    sta $fe09
 
     main_loop:
 
-    lda #19
-    jsr $fff4
+    lda #$04
+    bit $fe00
+    beq main_loop
+
+    lda #$10
+    sta $fe05
 
     start:
 
@@ -144,19 +156,31 @@ show:
     lda palette_fe09
     sta $fe09
 
-    ldx #35                 ; 2 c
+    ldx #41                 ; 2 c
 
     wait_loop:
 
         ; Wait for around 64us (128 cycles) per line.
 
-        ldy #33             ; 2 c
+        ldy #32             ; 2 c
         delay0:
             dey             ; 2 c
             bne delay0      ; 2 ~c
+                            ; (31 * 4) + 2 = 126
 
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
         dex                 ; 2 c
         bne wait_loop       ; 2 ~c
+                            ; 40 * (126 + 12) = 5520
+
+    ldy #11                 ; 2 c
+    delay1:
+        dey                 ; 2 c
+        bne delay1          ; 2 ~c
+                            ; (10 * 4) + 2 = 42
 
     ldx #0                  ; 2 c
 

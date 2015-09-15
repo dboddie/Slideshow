@@ -28,32 +28,11 @@ def system(command):
         sys.exit(1)
 
 boot_text = [
-    # Disable events
-    "*FX 13,0",
-    "*FX 13,1",
-    "*FX 13,2",
-    "*FX 13,3",
-    "*FX 13,4",
-    "*FX 13,5",
-    "*FX 13,6",
-    "*FX 13,7",
-    "*FX 13,8",
-    "*FX 13,9",
-    # Disable flashing colours
-    "*FX 9,0",
-    "*FX 10,0",
-    # Disable analogue port sampling
-    "*FX 16,0",
-    # Disable print and ADC
-    "*FX 163,128,0",
-    # Disable the expansion ROM
-    #"R%=?&2AC",
-    #"?&2AC=0",
-    # Disable certain interrupts
-    #"?&FE00=4",
     # Enter the display mode and create a text window
     "MODE 1:VDU 28,0,31,31,30",
     "VDU 23,1,0;0;0;0;",
+    # Disable printer and ADC
+    "*FX 163,128,1",
     # Disable VDU output
     "CLS:*FX 3,2"
     ]
