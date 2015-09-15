@@ -138,47 +138,61 @@ show:
 
     main_loop:
 
-    lda #$04
-    bit $fe00
-    beq main_loop
+    lda #$04                ; 2 c
+    bit $fe00               ; 4 c
+    beq main_loop           ; 3 c
 
-    lda #$10
-    sta $fe05
+    lda #$10                ; 2 c
+    sta $fe05               ; 4 c
+                            ; 15 c
 
     start:
 
-    lda palette_fe08        ; Set the palette for the first scanline.
-    sta $fe08
-    lda palette_fe09
-    sta $fe09
+    ; Set the palette for the first scanline.
 
-    ldx #41                 ; 2 c
+    lda palette_fe08        ; 4 c
+    sta $fe08               ; 4 c
+    lda palette_fe09        ; 4 c
+    sta $fe09               ; 4 c
+                            ; 16 c
 
+    ldx #53                 ; 2 c
     wait_loop:
 
         ; Wait for around 64us (128 cycles) per line.
 
-        ldy #32             ; 2 c
+        ldy #25             ; 2 c
         delay0:
             dey             ; 2 c
-            bne delay0      ; 2 ~c
-                            ; (31 * 4) + 2 = 126
+            bne delay0      ; 3 c
+                            ; (25 * 5) + 2 = 127
 
-        nop                 ; 2 c
-        nop                 ; 2 c
         nop                 ; 2 c
         nop                 ; 2 c
         dex                 ; 2 c
-        bne wait_loop       ; 2 ~c
-                            ; 40 * (126 + 12) = 5520
-
-    ldy #11                 ; 2 c
-    delay1:
-        dey                 ; 2 c
-        bne delay1          ; 2 ~c
-                            ; (10 * 4) + 2 = 42
+        bne wait_loop       ; 3 c
+                            ; 53 * (127 + 9) + 2 = 7210
 
     ldx #0                  ; 2 c
+                            ; 15 + 16 + 7210 + 2 = 7243 ~= 56.586 scanlines
+                            ; with 37 cycles until RAM read = 7280 = 56.875 scanlines
+                            ; with 26 extra cycles = 7306 ~= 57.078 scanlines
+
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
+
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
+
+    nop                     ; 2 c
+    nop                     ; 2 c
+    nop                     ; 2 c
 
     loop:
 
@@ -201,7 +215,7 @@ show:
         nop                 ; 2 c
 
         cpx #last_row       ; 2 c
-        beq end_loop        ; 2 ~c
+        beq end_loop        ; 3 c
         inx                 ; 2 c
 
         ; Accessing memory at this point should cause the CPU to block.
@@ -211,9 +225,8 @@ show:
         lda palette_fe09,x  ; 4 ~c
         sta $fe09           ; 4 c
 
-                            ; 52 c
-
-        jmp loop
+        jmp loop            ; 3 c
+                            ; 56 c
 
     end_loop:
 
