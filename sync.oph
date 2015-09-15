@@ -130,10 +130,6 @@ show:
     lda #255                ; Set the length of time to display the picture
     sta $70                 ; with the enhanced palette.
 
-    lda $fe00
-    ora #$04
-    sta $fe00
-
     sei
 
     lda #$ff
