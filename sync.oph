@@ -130,7 +130,7 @@ show:
     lda #255                ; Set the length of time to display the picture
     sta $70                 ; with the enhanced palette.
 
-    lda #25
+    lda #115
     sta $71
 
     sei
@@ -149,36 +149,36 @@ show:
     sta $fe05               ; 4 c
                             ; 15 c
 
-    start:
-
-    ; Set the palette for the first scanline.
-
     lda palette_fe08        ; 4 c
     sta $fe08               ; 4 c
     lda palette_fe09        ; 4 c
     sta $fe09               ; 4 c
                             ; 16 c
 
-    ldx #52                 ; 2 c
+    start:
+
+    ; Set the palette for the first scanline.
+
+    ldx $71                 ; 3 c
     wait_loop:
 
-        ; Wait for around 64us (128 cycles) per line.
+        ; Wait for around 32us (64 cycles) per half scanline.
 
-        ldy $71             ; 3 c
+        ldy #11             ; 2 c
         delay0:
             dey             ; 2 c
             bne delay0      ; 3 c
-                            ; (25 * 5) + 3 = 128
 
-        nop                 ; 2 c
         nop                 ; 2 c
         dex                 ; 2 c
         bne wait_loop       ; 3 c
-                            ; 52 * (128 + 9) + 2 = 7126
+                            ; (11 * 5) + 2 + 7 = 64
+                            ; (112 * 64) + 2 = 7170
 
     ldx #0                  ; 2 c
-                            ; 15 + 16 + 7126 + 2 = 7159 ~= 55.93 scanlines
-                            ; with 37 cycles until RAM read = 7196 ~= 56.22 scanlines
+
+                            ; 15 + 16 + 7170 + 2 = 7163 ~= 56.27 scanlines
+                            ; with 37 cycles until RAM read = 7240 = 56.56 scanlines
 
     loop:
 
@@ -219,6 +219,10 @@ show:
     lda #$ff                ; blank the palette for the remaining rows
     sta $fe08
     sta $fe09
+
+    lda $71
+    eor #1
+    sta $71
 
     dec $70
     bne main_loop
