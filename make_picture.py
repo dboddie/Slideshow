@@ -159,6 +159,9 @@ if __name__ == "__main__":
             
             else:
                 entries.sort()
+                
+                if 0 not in entries and len(entries) < 4:
+                    entries.insert(0, 0)
             
             palette[row - start_row] = entries
             old_entries = entries[:]
