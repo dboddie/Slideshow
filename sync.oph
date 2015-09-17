@@ -121,16 +121,12 @@ service_command:
 
 show:
 
-    ; Disable the keyboard interrupt.
-    lda #178
-    ldx #0
-    ldy #0
-    jsr $fff4
-
     lda #255                ; Set the length of time to display the picture
     sta $70                 ; with the enhanced palette.
 
-    lda #115
+    ldx #0
+    stx $72
+    lda row_sync,x
     sta $71
 
     sei
@@ -216,15 +212,36 @@ show:
 
     end_loop:
 
-    lda #$ff                ; blank the palette for the remaining rows
-    sta $fe08
-    sta $fe09
-
-    lda $71
+    lda $72
     eor #1
+    sta $72
+
+    ldx $72
+    lda row_sync,x
     sta $71
 
-    dec $70
+    ldx #183    ; :
+    jsr check_key
+    bne not_colon
+
+    lda $72
+    ora #2
+    sta $72
+
+    not_colon:
+
+    ldx #151    ; /
+    jsr check_key
+    bne not_slash
+
+    lda $72
+    and #$fd
+    sta $72
+
+    not_slash:
+
+    ldx #157    ; SPACE
+    jsr check_key
     bne main_loop
 
     cli
@@ -235,12 +252,6 @@ show:
     lda #$f1
     sta $fe09
 
-    ; Reenable the keyboard interrupt.
-    lda #178
-    ldx #255
-    ldy #0
-    jsr $fff4
-
 service_command_claimed:
 
     pla                         ; pop Y and X registers off the stack
@@ -249,3 +260,15 @@ service_command_claimed:
     tay
     lda #0                      ; claim service command
     rts
+
+check_key:      ; x = 255 - key_number
+
+    lda #129    ; returns y=255 or 0
+    ldy #255
+    jsr $fff4
+    cpy #255    ; Perform the check for a pressed key here.
+    rts
+
+row_sync:
+.byte 84, 85
+.byte 85, 84
