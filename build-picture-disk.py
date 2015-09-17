@@ -66,6 +66,7 @@ if __name__ == "__main__":
         i += 1
     
     boot_text.append("*FX 3")
+    boot_text.append("VDU 26:CLS")
     boot_text.append("")
     
     # Assemble the files.
