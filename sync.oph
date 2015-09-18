@@ -132,26 +132,24 @@ show:
 
     ; Clear the vsync interrupt bit.
 
-    lda #$10                ; 2 c
-    sta $fe05               ; 4 c
-                            ; 15 c
+    lda #$10
+    sta $fe05
 
     ; Wait until the vsync bit is cleared.
 
-    lda #$04                ; 2 c
+    lda #$04
     wait0:
-    bit $fe00               ; 4 c
-    bne wait0               ; 3 c
+    bit $fe00
+    bne wait0
 
     ; Wait until the vsync bit is set, indicating the start of a new frame.
 
     wait1:
-    bit $fe00               ; 4 c
-    beq wait1               ; 3 c
+    bit $fe00
+    beq wait1
 
-    lda #$10                ; 2 c
-    sta $fe05               ; 4 c
-                            ; 15 c
+    lda #$10
+    sta $fe05
 
     ; Count the number of half scanlines to the end of the display. This will
     ; wrap around in an 8-bit value.
@@ -170,9 +168,8 @@ show:
         beq calibration_loop; 3 c
                             ; (11 * 5) + 2 + 9 = 66
 
-    lda #$10                ; 2 c
-    sta $fe05               ; 4 c
-                            ; 15 c
+    lda #$10
+    sta $fe05
 
     cpx #105                ; We waited for a large number of scanlines so
     beq short_wait          ; the next frame will be short.
@@ -216,13 +213,15 @@ show:
         dex                 ; 2 c
         bne wait_loop       ; 3 c
                             ; (11 * 5) + 2 + 7 = 64
-                            ; (112 * 64) + 2 = 7170
+                            ; (104 * 64) + 2 = 6658
 
     ldx #0                  ; 2 c
 
-                            ; 15 + 16 + 7170 + 2 = 7163 ~= 56.27 scanlines
-                            ; with 37 cycles until RAM read = 7240 = 56.56 scanlines
-
+                            ; 15 + 16 + 10 + 6658 + 2 = 6701 ~= 52.35 scanlines
+                            ; with 37 cycles until RAM read = 6738 = 52.64 scanlines
+                            ; The cycles for the remaining scanlines are used
+                            ; by the instructions after synchronisation at the
+                            ; end of the loop.
     loop:
 
         nop                 ; 2 c
@@ -259,18 +258,23 @@ show:
 
     end_loop:
 
+    ; Wait for the vsync bit to be set.
+
     lda #$04                ; 2 c
     wait2:
     bit $fe00               ; 4 c
     beq wait2               ; 3 c
 
+    ; The following instructions up to the end of the loop take about 4
+    ; scanlines to execute.
+
     lda #$10                ; 2 c
     sta $fe05               ; 4 c
                             ; 15 c
 
-    lda $72
-    eor #1
-    sta $72
+    lda $72                 ; 3 c
+    eor #1                  ; 2 c
+    sta $72                 ; 3 c
 
     ldx #157    ; SPACE
     jsr check_key
