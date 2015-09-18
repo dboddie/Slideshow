@@ -124,26 +124,70 @@ show:
     lda #255                ; Set the length of time to display the picture
     sta $70                 ; with the enhanced palette.
 
-    ldx #0
-    stx $72
-    lda row_sync,x
-    sta $71
-
     sei
 
     lda #$ff
     sta $fe08
     sta $fe09
 
-    main_loop:
-
-    lda #$04                ; 2 c
-    bit $fe00               ; 4 c
-    beq main_loop           ; 3 c
+    ; Clear the vsync interrupt bit.
 
     lda #$10                ; 2 c
     sta $fe05               ; 4 c
                             ; 15 c
+
+    ; Wait until the vsync bit is cleared.
+
+    lda #$04                ; 2 c
+    wait0:
+    bit $fe00               ; 4 c
+    bne wait0               ; 3 c
+
+    ; Wait until the vsync bit is set, indicating the start of a new frame.
+
+    wait1:
+    bit $fe00               ; 4 c
+    beq wait1               ; 3 c
+
+    lda #$10                ; 2 c
+    sta $fe05               ; 4 c
+                            ; 15 c
+
+    ; Count the number of half scanlines to the end of the display. This will
+    ; wrap around in an 8-bit value.
+
+    lda #$04                ; 2 c
+    ldx #0                  ; 2 c
+    calibration_loop:
+
+        ldy #11             ; 2 c
+        delay1:
+            dey             ; 2 c
+            bne delay1      ; 3 c
+
+        inx                 ; 2 c
+        bit $fe00           ; 4 c
+        beq calibration_loop; 3 c
+                            ; (11 * 5) + 2 + 9 = 66
+
+    lda #$10                ; 2 c
+    sta $fe05               ; 4 c
+                            ; 15 c
+
+    cpx #105                ; We waited for a large number of scanlines so
+    beq short_wait          ; the next frame will be short.
+
+    ldx #1
+    stx $72
+
+    bcc main_loop
+    
+    short_wait:
+
+    ldx #0
+    stx $72
+
+    main_loop:
 
     lda palette_fe08        ; 4 c
     sta $fe08               ; 4 c
@@ -155,7 +199,10 @@ show:
 
     ; Set the palette for the first scanline.
 
-    ldx $71                 ; 3 c
+    ldx $72                 ; 3 c
+    lda row_sync,x          ; 4-5 c
+    tax                     ; 2 c
+
     wait_loop:
 
         ; Wait for around 32us (64 cycles) per half scanline.
@@ -212,33 +259,18 @@ show:
 
     end_loop:
 
+    lda #$04                ; 2 c
+    wait2:
+    bit $fe00               ; 4 c
+    beq wait2               ; 3 c
+
+    lda #$10                ; 2 c
+    sta $fe05               ; 4 c
+                            ; 15 c
+
     lda $72
     eor #1
     sta $72
-
-    ldx $72
-    lda row_sync,x
-    sta $71
-
-    ldx #183    ; :
-    jsr check_key
-    bne not_colon
-
-    lda $72
-    ora #2
-    sta $72
-
-    not_colon:
-
-    ldx #151    ; /
-    jsr check_key
-    bne not_slash
-
-    lda $72
-    and #$fd
-    sta $72
-
-    not_slash:
 
     ldx #157    ; SPACE
     jsr check_key
@@ -270,5 +302,4 @@ check_key:      ; x = 255 - key_number
     rts
 
 row_sync:
-.byte 84, 85
-.byte 85, 84
+.byte 104, 105
