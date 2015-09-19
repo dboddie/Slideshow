@@ -59,20 +59,19 @@ if __name__ == "__main__":
     picture_data = []
     i = 1
     for name in picture_files:
-        picture_data.append((name, "PICT%i" % i, 0x2e00))
+        picture_data.append(("PICT%i" % i, 0x2e00, 0x2e00, open(name, "rb").read()))
         boot_text.append("?&FE08=&FF:?&FE09=&FF")
         boot_text.append("*LOAD PICT%i" % i)
-        boot_text.append("*SLIDE")
+        boot_text.append("*SHOW")
         i += 1
     
     boot_text.append("*FX 3")
     boot_text.append("VDU 26:CLS")
-    boot_text.append("PRINT ?&1900")
     boot_text.append("")
     
     # Assemble the files.
-    assemble = [("sync-ram.oph", "SLIDE", 0xe00)] + picture_data
-    files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text))]
+    assemble = [("sync-ram.oph", "SLIDE", 0xe00)]
+    files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text))] + picture_data
     
     for name, output, addr in assemble:
         if name.endswith(".oph"):

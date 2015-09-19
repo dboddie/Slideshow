@@ -168,7 +168,7 @@ if __name__ == "__main__":
             row += 1
         
         name = os.path.split(file_name)[1]
-        output_file = os.path.join("data", "picture-data-" + os.path.splitext(name)[0] + ".oph")
+        output_file = os.path.join("data", os.path.splitext(name)[0] + ".dat")
         print "Writing", output_file
         
         f = open(output_file, "w")
@@ -185,26 +185,18 @@ if __name__ == "__main__":
             fe08_values.append(0xff)
             fe09_values.append(0xff)
         
-        f.write("palette_fe08:\n")
         for fe08 in fe08_values:
-            f.write(".byte $%02x\n" % fe08)
+            f.write(chr(fe08))
         
-        f.write("\n")
-        
-        f.write("palette_fe09:\n")
         for fe09 in fe09_values:
-            f.write(".byte $%02x\n" % fe09)
-        
-        f.write("\n")
-        
-        f.write("screen_data:\n")
+            f.write(chr(fe09))
         
         by = start_row
         while by < min(start_row + max_rows, len(rows)):
         
             if im.size[0] < 320:
                 bx = 0
-                padding = []
+                padding = ""
                 while bx < 160 - im.size[0]/2:
                     values = []
                     y = by
@@ -215,18 +207,16 @@ if __name__ == "__main__":
                         except ValueError:
                             i = 0
                         value = bitmap[i] | (bitmap[i] << 1) | (bitmap[i] << 2) | (bitmap[i] << 3)
-                        values.append("$%02x" % value)
+                        padding += chr(value)
                         y += 1
                     
-                    padding.append(".byte " + ",".join(values) + "\n")
                     bx += 4
                 
-                f.write("".join(padding))
-            
+                f.write(padding)
+                
             bx = 0
             while bx < im.size[0]:
             
-                f.write(".byte ")
                 values = []
                 y = by
                 while y < by + 8:
@@ -245,15 +235,13 @@ if __name__ == "__main__":
                         value |= (bitmap[i] << shift)
                         shift += 1
                     
-                    values.append("$%02x" % value)
+                    f.write(chr(value))
                     y += 1
-                
-                f.write(",".join(values) + "\n")
                 
                 bx += 4
             
             if im.size[0] < 320:
-                f.write("".join(padding))
+                f.write(padding)
             
             by += 8
         
