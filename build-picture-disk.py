@@ -28,6 +28,9 @@ def system(command):
         sys.exit(1)
 
 boot_text = [
+    'MODE 3:VDU 14:PRINT "Press SHIFT to view more of the following text."',
+    '*TYPE LICENSE',
+    "REPEAT UNTIL INKEY(-99)",
     # Enter the display mode and create a text window
     "MODE 1:VDU 28,0,31,31,30",
     "VDU 23,1,0;0;0;0;",
@@ -69,9 +72,15 @@ if __name__ == "__main__":
     boot_text.append("VDU 26:CLS")
     boot_text.append("")
     
+    try:
+        image_license_text = open("LICENSE-images", "r").read().replace("\n", "\r")
+    except IOError:
+        image_license_text = "Include information about your images in a file called LICENSE-images."
+    
     # Assemble the files.
     assemble = [("sync-ram.oph", "SLIDE", 0xe00)]
-    files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text))] + picture_data
+    files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text)),
+             ("LICENSE", 0x0000, 0x0000, image_license_text)] + picture_data
     
     for name, output, addr in assemble:
         if name.endswith(".oph"):
