@@ -138,14 +138,6 @@ show:
         bne wait_loop       ; 3 c
                             ; (4 * 5) + 2 + 7 + 3 = 32 c
 
-    lda $b8fc               ; 4 c ; Check for SPACE as described by Tony Oakden
-    and #8                  ; 2 c ; The Micro User, Vol. 8, No. 10 (Dec. 1990).
-    bne end_loop            ; 3 c
-
-    lda $72                 ; 3 c
-    eor #1                  ; 2 c
-    sta $72                 ; 3 c
-
     ; x is already zero
 
     loop:
@@ -157,10 +149,18 @@ show:
 
         bcc next            ; 3 c
         next:
+
         inx                 ; 2 c
         bne loop            ; 3 c
+                            ; 24 c
 
-    jmp main_loop           ; 3 c
+    lda $72                 ; 3 c
+    eor #1                  ; 2 c
+    sta $72                 ; 3 c
+
+    lda $b8fc               ; 4 c ; Check for SPACE as described by Tony Oakden
+    and #8                  ; 2 c ; The Micro User, Vol. 8, No. 10 (Dec. 1990).
+    beq main_loop           ; 3 c
 
     end_loop:
 
@@ -183,4 +183,4 @@ check_key:      ; x = 255 - key_number
     rts
 
 row_sync:
-.byte 113, 114
+.byte 114, 115
