@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 3:
     
-        sys.stderr.write("Usage: %s <Ophis picture data files> ... <new SSD file>\n" % sys.argv[0])
+        sys.stderr.write("Usage: %s <picture data files> ... <new SSD file>\n" % sys.argv[0])
         sys.exit(1)
     
     out_file = sys.argv[-1]
