@@ -59,27 +59,27 @@ if __name__ == "__main__":
     picture_data = []
     i = 1
     for name in picture_files:
-        picture_data.append((name, "PICT%i" % i))
+        picture_data.append((name, "PICT%i" % i, 0x2e00))
         boot_text.append("?&FE08=&FF:?&FE09=&FF")
         boot_text.append("*LOAD PICT%i" % i)
-        boot_text.append("*SHOW")
+        boot_text.append("*SLIDE")
         i += 1
     
     boot_text.append("*FX 3")
     boot_text.append("VDU 26:CLS")
+    boot_text.append("PRINT ?&1900")
     boot_text.append("")
     
     # Assemble the files.
-    assemble = picture_data
+    assemble = [("sync-ram.oph", "SLIDE", 0xe00)] + picture_data
     files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text))]
     
-    for name, output in assemble:
+    for name, output, addr in assemble:
         if name.endswith(".oph"):
             if not os.path.exists(output) or (
                 os.stat(name)[stat.ST_MTIME] > os.stat(output)[stat.ST_MTIME]):
                 system("ophis " + name + " -o " + output)
             code = open(output).read()
-            addr = 0x2e00
         else:
             code = open(name).read().replace("\n", "\r")
             addr = 0x0000
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
 
     # Remove the object files.
-    for name, output in assemble:
+    for name, output, addr in assemble:
         if name.endswith(".oph") and os.path.exists(output):
             os.remove(output)
     

@@ -121,9 +121,6 @@ service_command:
 
 show:
 
-    lda #255                ; Set the length of time to display the picture
-    sta $70                 ; with the enhanced palette.
-
     sei
 
     lda #$ff
@@ -270,7 +267,6 @@ show:
 
     lda #$10                ; 2 c
     sta $fe05               ; 4 c
-                            ; 15 c
 
     lda $72                 ; 3 c
     eor #1                  ; 2 c
