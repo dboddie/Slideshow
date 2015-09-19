@@ -1,0 +1,186 @@
+; Copyright (C) 2015 David Boddie <david@boddie.org.uk>
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+.alias palette_fe08 $2e00
+.alias palette_fe09 $2f00
+
+.org $e00
+
+show:
+
+    lda #8                  ; Page in the keyboard.
+    sta $fe05
+
+    sei
+
+    lda #$ff
+    sta $fe08
+    sta $fe09
+
+    ; Clear the vsync interrupt bit.
+
+    lda #$10
+    sta $fe05
+
+    ; Wait until the vsync bit is cleared.
+
+    lda #$04
+    wait0:
+    bit $fe00
+    bne wait0
+
+    ; Wait until the vsync bit is set, indicating the start of a new frame.
+
+    wait1:
+    bit $fe00
+    beq wait1
+
+    lda #$10
+    sta $fe05
+
+    ; Count the number of half scanlines to the end of the display. This will
+    ; wrap around in an 8-bit value.
+
+    lda #$04                ; 2 c
+    ldx #0                  ; 2 c
+    calibration_loop:
+
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+
+        nop                 ; 2 c
+        bcc filler          ; 3 c
+        filler:
+
+        inx                 ; 2 c
+        bit $fe00           ; 4 c
+        beq calibration_loop; 3 c
+                            ; 24 c
+
+    lda #$10
+    sta $fe05
+
+    cpx #145                ; We waited for a large number of scanlines so
+    beq long_wait           ; the next frame will be short, but we will skip
+                            ; it and use the next long frame.
+    ldx #0
+    stx $72
+
+    bcc main_loop
+    
+    long_wait:
+
+    ldx #1
+    stx $72
+
+    ; Wait for the vsync bit to be cleared.
+
+    lda #$04                ; 2 c
+    wait2:
+    bit $fe00               ; 4 c
+    bne wait2               ; 3 c
+
+    main_loop:
+
+    ; Wait for the vsync bit to be set.
+
+    lda #$04                ; 2 c
+    wait3:
+    bit $fe00               ; 4 c
+    beq wait3               ; 3 c
+
+    lda #$10                ; 2 c
+    sta $fe05               ; 4 c
+                            ; 15 c
+
+    lda palette_fe08        ; 4 c
+    sta $fe08               ; 4 c
+    lda palette_fe09        ; 4 c
+    sta $fe09               ; 4 c
+                            ; 16 c
+
+    start:
+
+    ; Set the palette for the first scanline.
+
+    ldx $72                 ; 3 c
+    lda row_sync,x          ; 4-5 c
+    tax                     ; 2 c
+
+    wait_loop:
+
+        ; Wait for around 32us (32 cycles) per half scanline.
+
+        ldy #4              ; 2 c
+        delay0:
+            dey             ; 2 c
+            bne delay0      ; 3 c
+
+        beq next0           ; 3 c
+        next0:
+        nop                 ; 2 c
+        dex                 ; 2 c
+        bne wait_loop       ; 3 c
+                            ; (4 * 5) + 2 + 7 + 3 = 32 c
+
+    lda $b8fc               ; 4 c ; Check for SPACE as described by Tony Oakden
+    and #8                  ; 2 c ; The Micro User, Vol. 8, No. 10 (Dec. 1990).
+    bne end_loop            ; 3 c
+
+    lda $72                 ; 3 c
+    eor #1                  ; 2 c
+    sta $72                 ; 3 c
+
+    ; x is already zero
+
+    loop:
+
+        lda palette_fe08,x  ; 4 ~c
+        sta $fe08           ; 4 c
+        lda palette_fe09,x  ; 4 ~c
+        sta $fe09           ; 4 c
+
+        bcc next            ; 3 c
+        next:
+        inx                 ; 2 c
+        bne loop            ; 3 c
+
+    jmp main_loop           ; 3 c
+
+    end_loop:
+
+    cli
+
+    ; Restore the palette.
+    lda #$73
+    sta $fe08
+    lda #$f1
+    sta $fe09
+
+    rts
+
+check_key:      ; x = 255 - key_number
+
+    lda #129    ; returns y=255 or 0
+    ldy #255
+    jsr $fff4
+    cpy #255    ; Perform the check for a pressed key here.
+    rts
+
+row_sync:
+.byte 113, 114
