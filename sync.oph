@@ -183,6 +183,8 @@ show:
 
     main_loop:
 
+    ; Set the palette for the first scanline.
+
     lda palette_fe08        ; 4 c
     sta $fe08               ; 4 c
     lda palette_fe09        ; 4 c
@@ -190,8 +192,6 @@ show:
                             ; 16 c
 
     start:
-
-    ; Set the palette for the first scanline.
 
     ldx $72                 ; 3 c
     lda row_sync,x          ; 4-5 c

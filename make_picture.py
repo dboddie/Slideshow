@@ -43,18 +43,24 @@ def find_colour(r, g, b):
     elif r == g:
         if r > b:
             colour = 3
+        elif r > 1:
+            colour = 6
         else:
             colour = 4
 
     elif g == b:
         if g > r:
             colour = 6
+        elif g > 1:
+            colour = 5
         else:
             colour = 1
 
     elif b == r:
         if b > g:
             colour = 5
+        elif b > 1:
+            colour = 3
         else:
             colour = 2
 
