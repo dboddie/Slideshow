@@ -28,14 +28,14 @@ def system(command):
         sys.exit(1)
 
 boot_text = [
-    'MODE 3:VDU 14:PRINT "Press SHIFT to view more of the following text."',
-    '*TYPE LICENSE',
-    "REPEAT UNTIL INKEY(-99)",
-    # Enter the display mode and create a text window
-    "MODE 1:VDU 28,0,31,31,30",
-    "VDU 23,1,0;0;0;0;",
     # Disable printer and ADC
     "*FX 163,128,1",
+    # Run the instructions viewer.
+    "*/ INSTR",
+    # Clear the screen and create a text window
+    "CLS",
+    "VDU 28,0,31,31,30",
+    # Run the instructions viewer
     # Disable VDU output
     "CLS:*FX 3,2"
     ]
@@ -78,9 +78,11 @@ if __name__ == "__main__":
         image_license_text = "Include information about your images in a file called LICENSE-images."
     
     # Assemble the files.
-    assemble = [("sync-ram.oph", "SLIDE", 0xe00)]
+    assemble = [("sync-ram.oph", "SLIDE", 0xe00),
+                ("instructions.oph", "INSTR", 0x1900)]
     files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text)),
-             ("LICENSE", 0x0000, 0x0000, image_license_text)] + picture_data
+             ("LICENSE", 0x0000, 0x0000, image_license_text),
+             ("COPYING", 0x0000, 0x0000, open("COPYING", "r").read().replace("\n", "\r"))] + picture_data
     
     for name, output, addr in assemble:
         if name.endswith(".oph"):
@@ -122,4 +124,4 @@ if __name__ == "__main__":
             os.remove(output)
     
     # Exit
-    #sys.exit()
+    sys.exit()

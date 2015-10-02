@@ -1,0 +1,200 @@
+; Copyright (C) 2015 David Boddie <david@boddie.org.uk>
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+.org $1900
+
+lda #22
+jsr $ffee
+lda #1
+jsr $ffee
+
+lda #23         ; disable flashing cursor
+jsr $ffee
+lda #1
+jsr $ffee
+ldx #7
+cursor_loop:
+    lda #0
+    jsr $ffee
+    dex
+    bpl cursor_loop
+
+lda #$ff
+sta $fe08
+sta $fe09
+
+lda #<text
+sta $70
+lda #>text
+sta $71
+
+lda #<text_end
+sta $72
+lda #>text_end
+sta $73
+
+jsr show_text
+
+ldx #0
+palette_loop:
+    lda palette_fe08,x
+    sta $2e00,x
+    lda palette_fe09,x
+    sta $2f00,x
+    inx
+    cpx #0
+    bne palette_loop
+
+ldx #<show
+ldy #>show
+jsr $fff7
+
+lda #$ff
+sta $fe08
+sta $fe09
+
+rts
+
+show_text:
+
+    loop:
+        ldy #0
+
+        lda ($70),y
+        jsr $ffee
+
+        lda $70
+        adc #1
+        sta $70
+        lda $71
+        adc #0
+        sta $71
+        clc
+
+        lda $70
+        cmp $72
+        bne loop
+        lda $71
+        cmp $73
+        bne loop
+
+    clc
+    rts
+
+show:
+.byte "*SHOW", 13, 0
+
+text:
+.byte "            ", 17,1, "Enhanced", 17,2, " MODE", 17,3, " 1", 13, 10
+.byte "            ", 17,1, "-----", 17,2, "-----", 17,3, "-----", 13, 10
+.byte 13, 10
+.byte "This disk contains a number of pictures", 13, 10
+.byte "stored as MODE 1 images with the usual", 13, 10
+.byte 17,3, "four ", 17,2, "colour ", 17,1, "palette. ", 17,3, "However, these are", 13, 10
+.byte "accompanied by additional palette data", 13, 10
+.byte "that is used to change the palette on", 13, 10
+.byte "each scanline. This lets us do things", 13, 10
+.byte "like use ", 17,1, "red", 17,3, ", white and ", 17,2, "blue ", 17,3, "on one line"
+.byte "with ", 17,1, "green ", 17,3, "and ", 17,2, "magenta ", 17,3, "on another", 13,10
+.byte "then ", 17,2, "yellow ", 17,3, "and ", 17,1, "cyan ", 17,3, "on the next.", 13,10
+.byte 13,10
+.byte "Because we can adjust the palette on", 13,10
+.byte "each scanline, we can even use simple", 13,10
+.byte "dithering to fake ", 17,1, "extra ", 17,2, "colours ", 17,3, "or even", 13,10
+.byte "change the palette on every scanline.", 13,10
+.byte 13,10
+.byte "This program is free software: you can", 13,10
+.byte "redistribute it and/or modify it under", 13,10
+.byte "the terms of the GNU General Public", 13,10
+.byte "License as published by the Free", 13,10
+.byte "Software Foundation, either version 3", 13,10
+.byte "of the License, or (at your option) any", 13,10
+.byte "later version.", 13,10
+.byte 13,10
+.byte "See the ", 17,2, "COPYING", 17,3, " file for the full text", 13,10
+.byte "of the license. See the ", 17,2, "LICENSE", 17,3, " file", 13,10
+.byte "for the license of the images.", 13,10
+.byte 13,10
+.byte " Press ", 17,129, 17,0, " SPACE ", 17,128, 17,3, " to start the slideshow."
+
+text_end:
+
+palette_fe08:
+.byte $73, $73, $73, $73, $73, $73, $73, $73    ; title
+.byte $53, $53, $53, $53, $53, $53, $53, $53    ; underline
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $37, $37, $37, $37, $37, $37, $37, $37    ; red, white, blue
+.byte $37, $37, $37, $37, $37, $37, $37, $37    ; green, magenta
+.byte $53, $53, $53, $53, $53, $53, $53, $53    ; yellow, cyan
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $f3, $73, $f3, $73, $f3, $73, $f3, $73    ; dithering (yellow, white)
+.byte $f3, $73, $f3, $73, $f3, $73, $f3, $73    ; dithering (green, white)
+.byte $53, $73, $53, $73, $53, $73, $53, $73    ; dithering (cyan, white)
+.byte $73, $73, $73, $7b, $f3, $f3, $fb, $7b    ; rainbow
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3    ; GPL start section
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3
+.byte $73, $f3, $73, $f3, $73, $f3, $73, $f3    ; GPL end section
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $33, $73, $33, $73, $33, $73, $33, $73    ; COPYING
+.byte $33, $73, $33, $73, $33, $73, $33, $73    ; LICENSE
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+.byte $33, $13, $13, $33, $33, $13, $13, $33
+.byte $73, $73, $73, $73, $73, $73, $73, $73
+
+palette_fe09:
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1    ; title
+.byte $fd, $fd, $fd, $fd, $fd, $fd, $fd, $fd    ; underline
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f5, $f5, $f5, $f5, $f5, $f5, $f5, $f5    ; red, white, blue
+.byte $d3, $d3, $d3, $d3, $d3, $d3, $d3, $d3    ; green, magenta
+.byte $d3, $d3, $d3, $d3, $d3, $d3, $d3, $d3    ; yellow, cyan
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1    ; dithering (yellow, white)
+.byte $f9, $f1, $fd, $f1, $f9, $f1, $f9, $f1    ; dithering (green, white)
+.byte $fd, $f1, $fd, $f1, $fd, $f1, $fd, $f1    ; dithering (cyan, white)
+.byte $f1, $f1, $f9, $f9, $f9, $f1, $f1, $f1    ; rainbow
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9    ; GPL start section
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9
+.byte $f9, $f9, $f9, $f9, $f9, $f9, $f9, $f9    ; GPL end section
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f5, $f1, $f5, $f1, $f5, $f1, $f5, $f1    ; COPYING
+.byte $f5, $f1, $f5, $f1, $f5, $f1, $f5, $f1    ; LICENSE
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1
+.byte $f1, $f1, $d1, $d1, $d3, $d3, $f3, $f3
+.byte $f1, $f1, $f1, $f1, $f1, $f1, $f1, $f1

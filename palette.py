@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
+
 colours = {"black": (0, 0, 0),  "red":  (1, 0, 0), "green":   (0, 1, 0),
            "yellow": (1, 1, 0), "blue": (0, 0, 1), "magenta": (1, 0, 1),
            "cyan": (0, 1, 1), "white": (1, 1, 1)}
@@ -71,4 +73,10 @@ def palette(number):
 
 if __name__ == "__main__":
 
-    palette(4)
+    if len(sys.argv) == 2:
+        rgb_list = map(lambda name: colours[name], sys.argv[1].split(","))
+        fe08, fe09 = get_entries(4, rgb_list)
+        print "fe08: $%x" % fe08
+        print "fe09: $%x" % fe09
+    else:
+        palette(4)
