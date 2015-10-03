@@ -28,8 +28,6 @@ def system(command):
         sys.exit(1)
 
 boot_text = [
-    # Disable printer and ADC
-    "*FX 163,128,1",
     # Run the instructions viewer.
     "*/ INSTR"
     ]
@@ -53,18 +51,19 @@ if __name__ == "__main__":
     # Collect the pictures in the data directory.
     picture_files = sys.argv[1:-1]
     
+    slides_list = []
+    
     picture_data = []
     i = 1
     for name in picture_files:
         picture_data.append(("PICT%i" % i, 0x2e00, 0x2e00, open(name, "rb").read()))
-        boot_text.append("?&FE08=&FF:?&FE09=&FF")
-        boot_text.append("*LOAD PICT%i" % i)
-        boot_text.append("*SHOW")
+        slides_list.append("?&FE08=&FF:?&FE09=&FF")
+        slides_list.append("*LOAD PICT%i" % i)
+        slides_list.append("*SHOW")
         i += 1
     
-    boot_text.append("*FX 3")
-    boot_text.append("VDU 26:CLS")
-    boot_text.append("")
+    slides_list.append("*FX 3")
+    slides_list.append("VDU 26:CLS")
     
     try:
         image_license_text = open("LICENSE-images", "r").read().replace("\n", "\r")
@@ -74,9 +73,10 @@ if __name__ == "__main__":
     # Assemble the files.
     assemble = [("sync-ram.oph", "SLIDE", 0xe00),
                 ("instructions.oph", "INSTR", 0x1900)]
-    files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text)),
+    files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text) + "\r"),
              ("LICENSE", 0x0000, 0x0000, image_license_text),
-             ("COPYING", 0x0000, 0x0000, __doc__.replace("\n", "\r"))] + picture_data
+             ("COPYING", 0x0000, 0x0000, __doc__.replace("\n", "\r")),
+             ("SLIDES", 0x0000, 0x0000, "\r".join(slides_list) + "\r")] + picture_data
     
     for name, output, addr in assemble:
         if name.endswith(".oph"):

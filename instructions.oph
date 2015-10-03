@@ -15,6 +15,29 @@
 
 .org $1900
 
+lda #129
+ldx #0
+ldy #255
+jsr $fff4
+cpx #1
+beq electron_os
+
+brk
+.byte 1
+.byte "The palette ROM only works on an Electron. Sorry!"
+brk
+
+electron_os:
+
+; Disable printer and ADC.
+
+lda #163
+ldx #128
+ldy #1
+jsr $fff4
+
+; Change mode.
+
 lda #22
 jsr $ffee
 lda #1
@@ -83,6 +106,10 @@ lda #3          ; Disable VDU output.
 ldx #2
 jsr $fff4
 
+ldx #<slides
+ldy #>slides
+jsr $fff7
+
 rts
 
 show_text:
@@ -113,6 +140,9 @@ show_text:
 
 show:
 .byte "*SHOW", 13, 0
+
+slides:
+.byte "*EXEC SLIDES", 13, 0
 
 text:
 .byte "            ", 17,1, "Enhanced", 17,2, " MODE", 17,3, " 1", 13, 10
