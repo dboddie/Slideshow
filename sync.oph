@@ -121,6 +121,19 @@ service_command:
 
 show:
 
+    ; Check the system in use.
+
+    lda #129
+    ldx #0
+    ldy #255
+    jsr $fff4
+    cpx #1
+    beq electron_os
+    
+    jmp service_command_claimed
+
+    electron_os:
+
     sei
 
     lda #$ff
