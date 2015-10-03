@@ -31,13 +31,7 @@ boot_text = [
     # Disable printer and ADC
     "*FX 163,128,1",
     # Run the instructions viewer.
-    "*/ INSTR",
-    # Clear the screen and create a text window
-    "CLS",
-    "VDU 28,0,31,31,30",
-    # Run the instructions viewer
-    # Disable VDU output
-    "CLS:*FX 3,2"
+    "*/ INSTR"
     ]
 
 if __name__ == "__main__":
@@ -82,7 +76,7 @@ if __name__ == "__main__":
                 ("instructions.oph", "INSTR", 0x1900)]
     files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text)),
              ("LICENSE", 0x0000, 0x0000, image_license_text),
-             ("COPYING", 0x0000, 0x0000, open("COPYING", "r").read().replace("\n", "\r"))] + picture_data
+             ("COPYING", 0x0000, 0x0000, __doc__.replace("\n", "\r"))] + picture_data
     
     for name, output, addr in assemble:
         if name.endswith(".oph"):
