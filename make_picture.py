@@ -28,6 +28,16 @@ rgb_values = [(0, 0, 0), (1, 0, 0), (0, 1, 0), (1, 1, 0),
 max_rows = 256
 start_row = 0
 
+# Physical colour values
+Black = 0
+Red = 1
+Green = 2
+Yellow = 3
+Blue = 4
+Magenta = 5
+Cyan = 6
+White = 7
+
 def find_colour(r, g, b):
 
     r = r / 85
@@ -76,6 +86,27 @@ def find_colour(r, g, b):
     
     return colour
 
+
+alternatives = {
+    Black:   (Blue, Red, Magenta, Green),
+    Red:     (Magenta, Yellow),
+    Green:   (Cyan, Yellow),
+    Yellow:  (Green, Cyan, White),
+    Blue:    (Cyan, Green),
+    Magenta: (Red, Yellow),
+    Cyan:    (Blue, Green, Yellow),
+    White:   (Cyan, Yellow)
+    }
+
+def find_alternative(palette, physical_colour):
+
+    for alt_colour in alternatives[physical_colour]:
+        try:
+            return palette.index(alt_colour)
+        except ValueError:
+            pass
+    
+    return 0
 
 if __name__ == "__main__":
 
@@ -254,7 +285,8 @@ if __name__ == "__main__":
                             # Find the logical colour for this physical colour.
                             i = palette[y - start_row].index(v)
                         except ValueError:
-                            i = 0
+                            # Find the next best alternative from the palette.
+                            i = 0 # find_alternative(palette[y - start_row], v)
                         value |= (bitmap[i] << shift)
                         shift += 1
                     
