@@ -50,8 +50,10 @@ if __name__ == "__main__":
     
     # Collect the pictures in the data directory.
     picture_files = sys.argv[1:-1]
+    picture_files.sort()
     
     slides_list = []
+    slides_list_ram = ["MODE1:VDU 28,0,31,39,30:VDU 23,1,0;0;0;0;:*FX 3,2"]
     
     picture_data = []
     i = 1
@@ -60,10 +62,15 @@ if __name__ == "__main__":
         slides_list.append("?&FE08=&FF:?&FE09=&FF")
         slides_list.append("*LOAD PICT%i" % i)
         slides_list.append("*SHOW")
+        slides_list_ram.append("?&FE08=&FF:?&FE09=&FF")
+        slides_list_ram.append("*LOAD PICT%i" % i)
+        slides_list_ram.append("*SLIDE")
         i += 1
     
     slides_list.append("*FX 3")
     slides_list.append("VDU 26:CLS")
+    slides_list_ram.append("*FX 3")
+    slides_list_ram.append("VDU 26:CLS:PRINT ?&2000")
     
     try:
         image_license_text = open("LICENSE-images", "r").read().replace("\n", "\r")
@@ -76,7 +83,9 @@ if __name__ == "__main__":
     files = [("!BOOT", 0x0000, 0x0000, "\r".join(boot_text) + "\r"),
              ("LICENSE", 0x0000, 0x0000, image_license_text),
              ("COPYING", 0x0000, 0x0000, __doc__.replace("\n", "\r")),
-             ("SLIDES", 0x0000, 0x0000, "\r".join(slides_list) + "\r")] + picture_data
+             ("SLIDES", 0x0000, 0x0000, "\r".join(slides_list) + "\r"),
+             ("RS", 0x0000, 0x0000, "\r".join(slides_list_ram) + "\r")] + \
+             picture_data
     
     for name, output, addr in assemble:
         if name.endswith(".oph"):
