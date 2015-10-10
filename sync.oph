@@ -36,7 +36,7 @@ copyright_offset:
 .byte "Palette test", 0
 
 ; Version string
-.byte "1.0", 0
+.byte "1.1", 0
 
 copyright_string:
 .byte "(C) 2015 David Boddie", 0
@@ -161,35 +161,35 @@ show:
     lda #$10
     sta $fe05
 
-    ; Count the number of half scanlines to the end of the display. This will
-    ; wrap around in an 8-bit value.
-
-    lda #$04                ; 2 c
-    ldx #0                  ; 2 c
-    calibration_loop:
-
-        ldy #11             ; 2 c
-        delay1:
-            dey             ; 2 c
-            bne delay1      ; 3 c
-
-        inx                 ; 2 c
-        bit $fe00           ; 4 c
-        beq calibration_loop; 3 c
-                            ; (11 * 5) + 2 + 9 = 66
-
-    lda #$10
-    sta $fe05
-
-    cpx #105                ; We waited for a large number of scanlines so
-    beq short_wait          ; the next frame will be short.
-
-    ldx #1
-    stx $72
-
-    bcc main_loop
+    jsr calibrate
+    stx $70
     
-    short_wait:
+    jsr calibrate
+    stx $71
+
+    lda $70
+    cmp $71
+    beq both_the_same
+    bcc lowest_first
+
+    sta $71                 ; The first value is the highest, so store a
+    dec $71                 ; slightly lower value in the second slot.
+    jmp pre_loop
+
+    lowest_first:
+
+    lda $71                 ; The first value is the lowest, so store a
+    sta $70                 ; slightly lower value than the second value in
+    dec $70                 ; the first slot.
+    jmp pre_loop
+
+    both_the_same:
+
+    inc $70                 ; Both values are the same. This probably means
+    inc $71                 ; that we're getting an average value. Increment
+    inc $71                 ; them both, but make the second slot higher.
+
+    pre_loop:
 
     ldx #0
     stx $72
@@ -207,7 +207,8 @@ show:
     start:
 
     ldx $72                 ; 3 c
-    lda row_sync,x          ; 4-5 c
+    lda $70,x               ; 4 c
+    nop
     tax                     ; 2 c
 
     wait_loop:
@@ -314,5 +315,31 @@ check_key:      ; x = 255 - key_number
     cpy #255    ; Perform the check for a pressed key here.
     rts
 
-row_sync:
-.byte 104, 105
+calibrate:
+
+    ; Count the number of half scanlines to the end of the display. This will
+    ; wrap around in an 8-bit value.
+
+    lda #$04                ; 2 c
+    ldx #0                  ; 2 c
+    calibration_loop:
+
+        ldy #11             ; 2 c
+        delay1:
+            dey             ; 2 c
+            bne delay1      ; 3 c
+
+        inx                 ; 2 c
+
+        ; Continue until the vsync interrupt bit is set again.
+
+        bit $fe00           ; 4 c
+        beq calibration_loop; 3 c
+                            ; (11 * 5) + 2 + 9 = 66
+
+    ; Clear the vsync interrupt bit.
+
+    lda #$10
+    sta $fe05
+
+    rts
