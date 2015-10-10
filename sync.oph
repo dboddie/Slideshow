@@ -18,6 +18,9 @@
 .alias palette_fe08 $2e00
 .alias palette_fe09 $2f00
 
+.alias long_field 105
+.alias short_field 104
+
 .org $8000
 rom_start:
 .byte 0, 0, 0
@@ -36,7 +39,7 @@ copyright_offset:
 .byte "Palette test", 0
 
 ; Version string
-.byte "1.1", 0
+.byte "1.2", 0
 
 copyright_string:
 .byte "(C) 2015 David Boddie", 0
@@ -161,33 +164,32 @@ show:
     lda #$10
     sta $fe05
 
-    jsr calibrate
-    stx $70
+    calibration:
+
+        jsr calibrate
+        stx $70
     
-    jsr calibrate
-    stx $71
+        jsr calibrate
+        stx $71
 
-    lda $70
-    cmp $71
-    beq both_the_same
-    bcc lowest_first
+        lda $70
+        cmp $71
+        beq calibration
 
-    sta $71                 ; The first value is the highest, so store a
-    dec $71                 ; slightly lower value in the second slot.
-    jmp pre_loop
+    bcs highest_first
 
-    lowest_first:
-
-    lda $71                 ; The first value is the lowest, so store a
+    lda #short_field        ; The first value is the lowest, so store a
     sta $70                 ; slightly lower value than the second value in
-    dec $70                 ; the first slot.
-    jmp pre_loop
+    lda #long_field         ; the first slot.
+    sta $71
+    bcc pre_loop
 
-    both_the_same:
+    highest_first:
 
-    inc $70                 ; Both values are the same. This probably means
-    inc $71                 ; that we're getting an average value. Increment
-    inc $71                 ; them both, but make the second slot higher.
+    lda #long_field         ; The first value is the highest, so store a
+    sta $70                 ; slightly lower value in the second slot.
+    lda #short_field
+    sta $71
 
     pre_loop:
 
@@ -208,7 +210,6 @@ show:
 
     ldx $72                 ; 3 c
     lda $70,x               ; 4 c
-    nop
     tax                     ; 2 c
 
     wait_loop:
