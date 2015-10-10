@@ -208,7 +208,7 @@ if __name__ == "__main__":
         
         for entries in palette:
         
-            fe08, fe09 = get_entries(4, map(lambda x: rgb_values[x], entries))
+            fe08, fe09 = get_entries(max_entries, map(lambda x: rgb_values[x], entries))
             fe08_values.append(fe08)
             fe09_values.append(fe09)
         
