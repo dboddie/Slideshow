@@ -70,8 +70,8 @@ while y < 256:
 
 data = "".join(map(lambda row: row[:len(row)/2], rows))
 image = Image.fromstring("RGB", (320, 256), data)
-image.save("gradient1.png")
+image.save("Pictures/gradient1.png")
 
 data = "".join(rows)
 image = Image.fromstring("RGB", (640, 256), data)
-image.save("gradient0.png")
+image.save("Pictures/gradient0.png")
