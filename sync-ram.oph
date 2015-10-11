@@ -16,6 +16,12 @@
 .alias palette_fe08 $2e00
 .alias palette_fe09 $2f00
 
+.alias long_field 144
+.alias short_field 141
+
+.alias long_delay 94
+.alias short_delay 93
+
 .org $e00
 
 show:
@@ -74,10 +80,11 @@ show:
 
     lda #$10
     sta $fe05
+    stx $2000
 
-    cpx #145                ; We waited for a large number of scanlines so
-    beq long_wait           ; the next frame will be short, but we will skip
-                            ; it and use the next long frame.
+    cpx #long_field         ; We waited for a large number of scanlines so
+    bcs long_wait           ; the next frame will be short.
+
     ldx #0
     stx $72
 
@@ -108,9 +115,10 @@ show:
     sta $fe05               ; 4 c
                             ; 15 c
 
-    lda palette_fe08        ; 4 c
+;    lda palette_fe08        ; 4 c
+lda #$ff
     sta $fe08               ; 4 c
-    lda palette_fe09        ; 4 c
+;    lda palette_fe09        ; 4 c
     sta $fe09               ; 4 c
                             ; 16 c
 
@@ -124,32 +132,34 @@ show:
 
     wait_loop:
 
-        ; Wait for around 32us (32 cycles) per half scanline.
+        ; Wait for around 12us (12 cycles) per half scanline.
 
-        ldy #4              ; 2 c
-        delay0:
-            dey             ; 2 c
-            bne delay0      ; 3 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
+        nop                 ; 2 c
 
         beq next0           ; 3 c
         next0:
         nop                 ; 2 c
+        nop                 ; 2 c
         dex                 ; 2 c
         bne wait_loop       ; 3 c
-                            ; (4 * 5) + 2 + 7 + 3 = 32 c
+                            ; 24 c
 
     ; x is already zero
+    ldy #0
 
     loop:
 
-        lda palette_fe08,x  ; 4 ~c
+        lda palette_fe08,x  ; 5 c
         sta $fe08           ; 4 c
-        lda palette_fe09,x  ; 4 ~c
+        lda palette_fe09,x  ; 5 c
         sta $fe09           ; 4 c
 
-        bcc next            ; 3 c
-        next:
-
+        nop                 ; 2 c
         inx                 ; 2 c
         bne loop            ; 3 c
                             ; 24 c
@@ -183,4 +193,4 @@ check_key:      ; x = 255 - key_number
     rts
 
 row_sync:
-.byte 114, 115
+.byte short_delay, long_delay
