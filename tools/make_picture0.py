@@ -33,45 +33,22 @@ max_entries = 2
 
 def find_colour(r, g, b):
 
-    r = r / 85
-    g = g / 85
-    b = b / 85
+    r = r / 255.0
+    g = g / 255.0
+    b = b / 255.0
     
-    if r == g == b:
-        if r <= 1:
-            colour = 0
-        else:
-            colour = 7
-
-    elif r == g:
-        if r > b:
-            colour = 3
-        else:
-            colour = 4
-
-    elif g == b:
-        if g > r:
-            colour = 6
-        else:
-            colour = 1
-
-    elif b == r:
-        if b > g:
-            colour = 5
-        else:
-            colour = 2
-
-    else:
-        if b > r and b > g:
-            colour = 4
-        elif r > g and r > b:
-            colour = 1
-        elif g > b and g > r:
-            colour = 2
-        else:
-            colour = 0
+    distances = []
+    i = 0
     
-    return colour
+    for R, G, B in rgb_values:
+    
+        dr, dg, db = r - R, g - G, b - B
+        d2 = (dr ** 2) + (dg ** 2) + (db ** 2)
+        distances.append((d2, i))
+        i += 1
+    
+    distances.sort()
+    return distances[0][1]
 
 def logical(palette, colour):
 
