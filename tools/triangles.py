@@ -35,7 +35,8 @@ colours = [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White]
 y = 0
 rh = 16
 rw = rh * 2
-rows = []
+scanlines = []
+row = 0
 
 colour0 = colours[random.randrange(0, 7)]
 colour1 = colour0
@@ -71,9 +72,12 @@ while y < 256:
         scanline = ""
         x = 0
         # Change the span length for each scanline.
-        tw = ry * (rw/rh) + 1
-        t = 0
+        if row % 4 == 0 or row % 4 == 3:
+            tw = ry * (rw/rh) + 1
+        else:
+            tw = rw - (ry * (rw/rh)) - 1
         
+        # Maintain an index into the tile colour list.
         c = 0
         
         while x < 640:
@@ -87,24 +91,24 @@ while y < 256:
             p = ry % 2
             i = 0
             while i < min(640 - x, tw):
-                row += colour[p]
+                scanline += colour[p]
                 i += 1
                 p = 1 - p
             
             x += tw
             
             # Mirror the triangles every two triangles.
-            if t == 0:
+            if c % 2 == 0:
                 tw = rw - tw
             
             c += 1
-            t = (t + 1) % 2
         
-        rows.append(scanline)
+        scanlines.append(scanline)
         ry += 1
     
     y += rh
+    row += 1
 
-image = Image.fromstring("RGB", (640, 256), "".join(rows))
+image = Image.fromstring("RGB", (640, 256), "".join(scanlines))
 
 image.save("Pictures/triangles.png")
