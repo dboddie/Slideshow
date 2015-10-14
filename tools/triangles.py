@@ -17,8 +17,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import random
-
 import Image
 
 Black = "\x00\x00\x00"
@@ -55,10 +53,10 @@ tiles = [(2,0, 0,1, 1,1, 1,0, 0,1, 0,0, 0,1, 0,0, 0,1, 0,0, 0,1, 1,0, 0,2, 2,0, 
          (1,0, 0,2, 2,0, 0,1, 0,0, 0,1, 1,0, 0,0, 1,1, 1,0, 0,0, 1,1, 1,1, 1,0, 0,0, 0,1, 1,0, 0,1, 1,0, 0,2),
          (2,1, 1,2, 2,1, 1,2, 2,1, 1,2, 2,1, 1,2, 1,0, 0,2, 2,0, 0,2, 2,0, 0,2, 2,2, 2,0, 0,1, 1,0, 0,2, 2,2),
          (1,2, 2,2, 2,2, 2,1, 1,2, 2,1, 1,1, 1,2, 0,1, 1,2, 2,1, 1,2, 2,1, 1,2, 2,1, 1,1, 1,0, 0,1, 1,1, 1,2),
-         (2,0, 1,0, 1,1, 0,1, 0,2, 2,0, 0,2, 2,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 0,0, 1,0, 0,0, 0,1, 1,1, 1,0),
+         (2,0, 1,0, 1,1, 0,1, 0,2, 2,0, 0,2, 2,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 0,1, 1,1, 0,0, 1,1, 1,1, 1,0),
          (2,0, 0,1, 1,1, 1,0, 0,0, 0,2, 2,0, 0,2, 0,0, 0,1, 1,0, 1,1, 1,0, 1,1, 0,0, 1,1, 0,0, 0,1, 1,0, 0,0),
          (2,0, 0,1, 1,1, 1,0, 0,1, 1,0, 0,2, 2,0, 0,1, 1,0, 0,0, 1,1, 0,1, 1,1, 0,0, 1,1, 0,0, 0,0, 0,1, 1,0),
-         (2,0, 1,0, 1,1, 0,1, 0,1, 1,0, 0,2, 2,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 0,0, 0,1, 0,0, 1,1, 1,1, 1,0)]
+         (2,0, 1,0, 1,1, 0,1, 0,1, 1,0, 0,2, 2,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 1,1, 1,1, 1,0)]
 
 orientations = [
     r"///////////\/////\/\ ",
@@ -73,10 +71,10 @@ orientations = [
     r"//\\\\////\\\\/\\///",
     r"//\\/\////\/\/\\\///",
     r"//\\/\\\//\/\/\\\///",
-    r"/\//\\\\/\\//\/\////",
+    r"/\//\\\\/\\(/)/\////",
     r"\\\/\\\\/////\/\/\\\ ",
-    r"///\/\\\///////\//\\",
-    r"\/\\\///\\\\///\//// "
+    r"///\()\\///////\//\\ ",
+    r"\/\\[]//\\\[/]/\\///"
     ]
 
 while y < 256:
@@ -102,13 +100,55 @@ while y < 256:
             
             # Find the length of the span - this applies to two adjacent tiles.
             orientation = orientations[row][c/2]
-            tw = ry * (rw/rh) + 1
             
-            if orientation == "\\":
-                if c % 2 == 1:
+            if orientation in r"\/":
+            
+                tw = ry * (rw/rh) + 1
+                
+                if orientation == "\\":
+                    if c % 2 == 1:
+                        tw = rw - tw
+                elif c % 2 == 0:
                     tw = rw - tw
-            elif c % 2 == 0:
-                tw = rw - tw
+            
+            elif orientation == "|":
+            
+                tw = rw/2
+            
+            elif orientation == "-":
+            
+                if ry < rh/2:
+                    if c % 2 == 0:
+                        tw = rw
+                    else:
+                        tw = 0
+                else:
+                    if c % 2 == 0:
+                        tw = 0
+                    else:
+                        tw = rw
+            
+            elif orientation in "()":
+            
+                tw = rw - int(((rw**2) - (rw**2 * ((rh - (ry+1))**2)/(rh**2)))**0.5)
+                
+                if orientation == "(":
+                    if c % 2 == 1:
+                        tw = rw - tw
+                else:
+                    if c % 2 == 0:
+                        tw = rw - tw
+            
+            elif orientation in "[]":
+            
+                tw = rw - int(((rw**2) - (rw**2 * (ry**2)/(rh**2)))**0.5)
+                
+                if orientation == "[":
+                    if c % 2 == 1:
+                        tw = rw - tw
+                else:
+                    if c % 2 == 0:
+                        tw = rw - tw
             
             # Add the pixel values for the colour, alternating between the two
             # supplied values and starting with the second value on alternate
