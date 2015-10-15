@@ -30,16 +30,90 @@ White = "\xff\xff\xff"
 
 colours = [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White]
 
+class Solid:
+
+    def __init__(self, background, foreground):
+    
+        self.background = background
+        self.foreground = foreground
+    
+    def colour(self, colour_entry, row, x, height):
+    
+        if colour_entry == 0:
+            return self.background
+        elif colour_entry == 1:
+            return self.foreground
+        else:
+            p = (row + x) % 2
+            if p == 0:
+                return self.background
+            else:
+                return self.foreground
+
+class Gradient:
+
+    def __init__(self, background0, foreground0,
+                       background1 = None, foreground1 = None):
+    
+        self.background0 = background0
+        self.foreground0 = foreground0
+        
+        if not background1:
+            background1 = background0
+        if not foreground1:
+            foreground1 = foreground0
+        
+        self.background1 = background1
+        self.foreground1 = foreground1
+    
+    def colour(self, colour_entry, row, x, height):
+    
+        if colour_entry == 0:
+            colours0 = (self.background0, self.background0)
+            colours1 = (self.background1, self.background1)
+        elif colour_entry == 1:
+            colours0 = (self.foreground0, self.foreground0)
+            colours1 = (self.foreground1, self.foreground1)
+        else:
+            colours0 = (self.background0, self.foreground0)
+            colours1 = (self.background1, self.foreground1)
+        
+        colours = (colours0, colours1)
+        
+        if row < height/4:
+            c = 0
+        elif row < (3*height)/4:
+            c = row % 2
+        else:
+            c = 1
+        
+        p = (row + x) % 2
+        return colours[c][p]
+
 y = 0
 rh = 16
 rw = rh * 2
 scanlines = []
 row = 0
 
-row_colours = [(Red, Black), (Yellow, Black), (Green, Black), (Cyan, Black),
-               (White, Black), (Magenta, Green), (Red, Green), (Black, Green),
-               (Blue, Green), (Red, Green), (Black, Green), (Black, Red),
-               (Black, White), (Blue, White), (Magenta, White), (Red, White)]
+row_palettes = [
+    Gradient(Red, Black, Yellow),
+    Solid(Yellow, Black),
+    Gradient(Yellow, Black, Green),
+    Solid(Cyan, Black),
+    Solid(White, Black),
+    Solid(Magenta, Green),
+    Gradient(Red, Green, Black, Cyan),
+    Gradient(Black, Cyan, Black, Green),
+    Gradient(Black, Green, Blue),
+    Gradient(Blue, Green, Red),
+    Solid(Black, Green),
+    Gradient(Black, Red, Black, Blue),
+    Gradient(Blue, Cyan, Magenta, White),
+    Gradient(Magenta, White, Black),
+    Gradient(Black, White, Red),
+    Gradient(Red, White, Black, Cyan)
+    ]
 
 tiles = [(2,0, 0,1, 1,1, 1,0, 0,1, 0,0, 0,1, 0,0, 0,1, 0,0, 0,1, 1,0, 0,2, 2,0, 0,1, 0,0, 0,1, 1,0, 0,2, 2,0),
          (0,0, 1,2, 1,1, 2,2, 1,1, 0,2, 1,1, 0,2, 1,1, 2,1, 1,0, 0,2, 2,0, 0,2, 1,1, 2,1, 1,0, 0,2, 2,2, 2,2),
@@ -54,16 +128,16 @@ tiles = [(2,0, 0,1, 1,1, 1,0, 0,1, 0,0, 0,1, 0,0, 0,1, 0,0, 0,1, 1,0, 0,2, 2,0, 
          (2,1, 1,2, 2,1, 1,2, 2,1, 1,2, 2,1, 1,2, 1,0, 0,2, 2,0, 0,2, 2,0, 0,2, 2,2, 2,0, 0,1, 1,0, 0,2, 2,2),
          (1,2, 2,2, 2,2, 2,1, 1,2, 2,1, 1,1, 1,2, 0,1, 1,2, 2,1, 1,2, 2,1, 1,2, 2,1, 1,1, 1,0, 0,1, 1,1, 1,2),
          (2,0, 1,0, 1,1, 0,1, 0,2, 2,0, 0,2, 2,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 0,1, 1,1, 0,0, 1,1, 1,1, 1,0),
-         (2,0, 0,1, 1,1, 1,0, 0,0, 0,2, 2,0, 0,2, 0,0, 0,1, 1,0, 1,1, 1,0, 1,1, 0,0, 1,1, 0,0, 0,1, 1,0, 0,0),
-         (2,0, 0,1, 1,1, 1,0, 0,1, 1,0, 0,2, 2,0, 0,1, 1,0, 0,0, 1,1, 0,1, 1,1, 0,0, 1,1, 0,0, 0,0, 0,1, 1,0),
+         (2,0, 0,1, 1,1, 1,0, 0,0, 0,2, 2,0, 0,2, 0,0, 0,1, 1,0, 1,1, 0,1, 1,1, 0,0, 1,1, 0,0, 0,1, 1,0, 0,0),
+         (2,0, 0,1, 1,1, 1,0, 0,1, 1,0, 0,2, 2,0, 0,1, 1,0, 0,0, 1,1, 1,0, 1,1, 0,0, 1,1, 0,0, 0,0, 0,1, 1,0),
          (2,0, 1,0, 1,1, 0,1, 0,1, 1,0, 0,2, 2,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 0,1, 1,1, 1,0, 1,1, 1,1, 1,0)]
 
 orientations = [
-    r"///////////\/////\/\ ",
+    r"/(/]]/]/]//\//]//\/\ ",
+    r"/(////////////////\/",
+    r"///////\/\/\///\/)/\ ",
     r"//////////////////\/",
-    r"///////\/\/\///\/\/\ ",
-    r"//////////////////\/",
-    r"//\///\\\///\\/////\ ",
+    r"//\///\\\)/]\\/)///\ ",
     r"\\//\/\/\\/\/\///\\\ ",
     r"/\/\//\\\\////\//\\\ ",
     r"/\/\//\\/\\/\////\\\ ",
@@ -71,16 +145,15 @@ orientations = [
     r"//\\\\////\\\\/\\///",
     r"//\\/\////\/\/\\\///",
     r"//\\/\\\//\/\/\\\///",
-    r"/\//\\\\/\\(/)/\////",
-    r"\\\/\\\\/////\/\/\\\ ",
-    r"///\()\\///////\//\\ ",
-    r"\/\\[]//\\\[/]/\\///"
+    r"/\//\\\\(\)(/)]\////",
+    r"\\\/\\\\////)\/\/\\\ ",
+    r"///\()\\////[//\//\\ ",
+    r"\/\\[]//[\\[/]]\[//]"
     ]
 
 while y < 256:
 
-    colour0, colour1 = row_colours[row]
-    rgb_values = [(colour0, colour0), (colour1, colour1), (colour0, colour1)]
+    palette = row_palettes[row]
     tile_colours = tiles[row]
 
     ry = 0
@@ -95,8 +168,9 @@ while y < 256:
         
         while x < 640:
         
-            # Find the colour of this tile.
-            colour = rgb_values[tile_colours[c]]
+            # Find the colour entry of this tile (0=background, 1=foreground,
+            # 2=dither).
+            colour_entry = tile_colours[c]
             
             # Find the length of the span - this applies to two adjacent tiles.
             orientation = orientations[row][c/2]
@@ -153,12 +227,10 @@ while y < 256:
             # Add the pixel values for the colour, alternating between the two
             # supplied values and starting with the second value on alternate
             # scanlines.
-            p = (ry + x) % 2
             i = 0
             while i < min(640 - x, tw):
-                scanline += colour[p]
+                scanline += palette.colour(colour_entry, ry, x + i, rh)
                 i += 1
-                p = 1 - p
             
             x += tw
             c += 1
