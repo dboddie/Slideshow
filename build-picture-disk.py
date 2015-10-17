@@ -27,19 +27,23 @@ def system(command):
     if os.system(command):
         sys.exit(1)
 
-boot_text = [
-    # Run the instructions viewer.
-    "*/ INSTR"
-    ]
-
 if __name__ == "__main__":
 
     if len(sys.argv) < 3:
     
-        sys.stderr.write("Usage: %s <picture data files> ... <new SSD file>\n" % sys.argv[0])
+        sys.stderr.write("Usage: %s [-m <mode>] <picture data files> ... <new SSD file>\n" % sys.argv[0])
         sys.exit(1)
     
-    out_file = sys.argv[-1]
+    args = sys.argv[:]
+    
+    if "-m" in args:
+        m = args.index("-m")
+        mode = int(args[m + 1])
+        args = args[:m] + args[m + 2:]
+    else:
+        mode = 1
+    
+    out_file = args[-1]
     
     # Build the ROM image file.
     system("ophis sync.oph -o palette.rom")
@@ -49,11 +53,20 @@ if __name__ == "__main__":
     print "Written palette.rom"
     
     # Collect the pictures in the data directory.
-    picture_files = sys.argv[1:-1]
+    picture_files = args[1:-1]
     picture_files.sort()
     
+    boot_text = []
+    if mode == 0:
+        boot_text.append("*EXEC SLIDES")
+    else:
+        # Run the instructions viewer.
+        boot_text.append("*/ INSTR")
+
     slides_list = []
-    slides_list_ram = ["MODE1:VDU 28,0,31,39,30:VDU 23,1,0;0;0;0;:*FX 3,2"]
+    if mode == 0:
+        slides_list.append("MODE%i:VDU 28,0,31,39,30:VDU 23,1,0;0;0;0;:*FX 3,2" % mode)
+    slides_list_ram = ["MODE%i:VDU 28,0,31,39,30:VDU 23,1,0;0;0;0;:*FX 3,2" % mode]
     
     picture_data = []
     i = 1
