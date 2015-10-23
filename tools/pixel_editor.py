@@ -40,14 +40,16 @@ flood_icon = (
 
 class PictureWidget(QWidget):
 
-    def __init__(self, width = 640, height = 256, parent = None):
+    def __init__(self, width = 640, height = 256,
+                       xscale = 1, yscale = 2, parent = None):
     
         QWidget.__init__(self, parent)
         
         self.image = QImage(width, height, QImage.Format_RGB32)
+        self.clearPicture()
         
-        self.xs = 1
-        self.ys = 2
+        self.xs = xscale
+        self.ys = yscale
         self.scale = 1
         self.colour = QColor(Qt.white)
         self.tool = "pixel"
@@ -81,7 +83,7 @@ class PictureWidget(QWidget):
     
     def changeZoom(self, change):
     
-        self.scale = max(1, min(self.scale + change, 8))
+        self.scale = max(1, min(self.scale + change, 16))
         self.adjustSize()
     
     def mousePressEvent(self, event):
@@ -198,10 +200,47 @@ class EditorWindow(QMainWindow):
         self.colourGroup.actions()[0].trigger()
         self.toolGroup.actions()[0].trigger()
         
-        area = QScrollArea()
-        area.setWidget(self.pictureWidget)
-        self.setCentralWidget(area)
+        self.area = QScrollArea()
+        self.area.setWidget(self.pictureWidget)
+        self.setCentralWidget(self.area)
         self.setWindowTitle(self.tr("Pixel Editor"))
+    
+    def newFile(self):
+    
+        sizeDialog = QDialog()
+        
+        widthEdit = QSpinBox()
+        widthEdit.setRange(1, 640)
+        widthEdit.setValue(640)
+        heightEdit = QSpinBox()
+        heightEdit.setRange(1, 256)
+        heightEdit.setValue(256)
+        
+        aspectCombo = QComboBox()
+        aspectCombo.addItem(self.tr("1:1"))
+        aspectCombo.addItem(self.tr("1:2"))
+        aspectCombo.addItem(self.tr("2:1"))
+        
+        buttons = QDialogButtonBox()
+        buttons.addButton(QDialogButtonBox.Ok).clicked.connect(sizeDialog.accept)
+        buttons.addButton(QDialogButtonBox.Cancel).clicked.connect(sizeDialog.reject)
+        
+        layout = QFormLayout(sizeDialog)
+        layout.addRow(self.tr("&Width:"), widthEdit)
+        layout.addRow(self.tr("&Height:"), heightEdit)
+        layout.addRow(self.tr("&Aspect ratio:"), aspectCombo)
+        layout.addRow(buttons)
+        
+        if sizeDialog.exec_() == QDialog.Accepted:
+        
+            # Remove the existing picture widget and discard it.
+            self.area.takeWidget()
+            
+            xscale, yscale = [(1, 1), (1, 2), (2, 1)][aspectCombo.currentIndex()]
+            self.pictureWidget = PictureWidget(width = widthEdit.value(),
+                                               height = heightEdit.value(),
+                                               xscale = xscale, yscale = yscale)
+            self.area.setWidget(self.pictureWidget)
     
     def openFile(self):
     
@@ -284,6 +323,7 @@ class EditorWindow(QMainWindow):
         
         newAction = fileMenu.addAction(self.tr("&New"))
         newAction.setShortcut(QKeySequence.New)
+        newAction.triggered.connect(self.newFile)
         
         openAction = fileMenu.addAction(self.tr("&Open..."))
         openAction.setShortcut(QKeySequence.Open)
