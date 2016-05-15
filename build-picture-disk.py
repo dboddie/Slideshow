@@ -46,7 +46,10 @@ if __name__ == "__main__":
     out_file = args[-1]
     
     # Build the ROM image file.
-    system("ophis sync.oph -o palette.rom")
+    if mode == 0:
+        system("ophis sync0.oph -o palette.rom")
+    else:
+        system("ophis sync.oph -o palette.rom")
     rom = open("palette.rom", "rb").read()
     rom += "\x00" * (16384 - len(rom))
     open("palette.rom", "wb").write(rom)
@@ -71,7 +74,10 @@ if __name__ == "__main__":
     picture_data = []
     i = 1
     for name in picture_files:
-        picture_data.append(("PICT%i" % i, 0x2e00, 0x2e00, open(name, "rb").read()))
+        if mode == 0:
+            picture_data.append(("PICT%i" % i, 0x2f00, 0x2f00, open(name, "rb").read()))
+        else:
+            picture_data.append(("PICT%i" % i, 0x2e00, 0x2e00, open(name, "rb").read()))
         slides_list.append("?&FE08=&FF:?&FE09=&FF")
         slides_list.append("*LOAD PICT%i" % i)
         slides_list.append("*SHOW")

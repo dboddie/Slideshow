@@ -180,24 +180,18 @@ if __name__ == "__main__":
         print "Writing", output_file
         
         f = open(output_file, "w")
-        fe08_values = []
-        fe09_values = []
         
         for entries in palette:
         
             fe08, fe09 = get_entries(max_entries, map(lambda x: rgb_values[x], entries))
-            fe08_values.append(fe08)
-            fe09_values.append(fe09)
+            fe08 = fe08 & 0x54
+            fe09 = fe09 & 0x15
+            f.write(chr(fe08 | (fe09 << 1)))
         
-        while len(fe08_values) < max_rows:
-            fe08_values.append(0xff)
-            fe09_values.append(0xff)
-        
-        for fe08 in fe08_values:
-            f.write(chr(fe08))
-        
-        for fe09 in fe09_values:
-            f.write(chr(fe09))
+        i = len(palette)
+        while i < max_rows:
+            f.write(chr(0xff))
+            i += 1
         
         by = start_row
         while by < min(start_row + max_rows, len(rows)):
