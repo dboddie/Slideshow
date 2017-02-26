@@ -29,11 +29,6 @@ def system(command):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 3:
-    
-        sys.stderr.write("Usage: %s [-m <mode>] <picture data files> ... <new SSD file>\n" % sys.argv[0])
-        sys.exit(1)
-    
     args = sys.argv[:]
     
     if "-m" in args:
@@ -42,6 +37,11 @@ if __name__ == "__main__":
         args = args[:m] + args[m + 2:]
     else:
         mode = 1
+    
+    if len(args) < 3:
+    
+        sys.stderr.write("Usage: %s [-m <mode>] <picture data files> ... <new SSD file>\n" % sys.argv[0])
+        sys.exit(1)
     
     out_file = args[-1]
     
