@@ -37,7 +37,8 @@ show:
 
     ; Clear the vsync interrupt bit.
 
-    lda #$10
+    lda $f4
+    ora #$10
     sta $fe05
 
     ; Wait until the vsync bit is cleared.
@@ -53,7 +54,8 @@ show:
     bit $fe00
     beq wait1
 
-    lda #$10
+    lda $f4
+    ora #$10
     sta $fe05
 
     ; Count the number of half scanlines to the end of the display. This will
@@ -78,7 +80,8 @@ show:
         beq calibration_loop; 3 c
                             ; 24 c
 
-    lda #$10
+    lda $f4
+    ora #$10
     sta $fe05
     stx $2000
 
@@ -111,7 +114,8 @@ show:
     bit $fe00               ; 4 c
     beq wait3               ; 3 c
 
-    lda #$10                ; 2 c
+    lda $f4                 ; 3 c
+    ora #$10                ; 2 c
     sta $fe05               ; 4 c
                             ; 15 c
 
